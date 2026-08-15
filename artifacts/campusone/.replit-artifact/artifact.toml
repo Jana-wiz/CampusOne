@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CampusOne"
+description = "A campus-exclusive networking platform that helps students connect, collaborate, discover mentors, join clubs, find events, share resources, and explore opportunities within their college community."
+version = "1.0.0"
+id = "artifacts/campusone"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24362
+
+[services.development]
+run = "pnpm --filter @workspace/campusone run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/campusone", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/campusone/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24362"
+BASE_PATH = "/"
