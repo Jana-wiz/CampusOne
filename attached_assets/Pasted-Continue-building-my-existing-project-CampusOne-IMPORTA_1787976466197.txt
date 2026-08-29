@@ -1,0 +1,143 @@
+Continue building my existing project "CampusOne".
+
+IMPORTANT:
+This is NOT a new project.
+Do NOT redesign the existing application.
+Do NOT modify the dashboard, sidebar, theme, typography, colors, navigation, or components.
+
+Your task is ONLY to create a production-quality Login & Authentication module that integrates with my existing application.
+
+Requirements:
+
+• Reuse the current design system.
+• Keep the same color palette, spacing, typography, cards, buttons and icons.
+• The login page should look modern and premium.
+• Mobile and desktop responsive.
+
+--------------------------------------------------
+
+LOGIN PAGE
+
+Display:
+
+CampusOne Logo
+
+Title:
+Welcome Back 👋
+
+Subtitle:
+Sign in to continue your campus journey.
+
+Input Fields:
+
+• College Register Number
+• Password
+
+Checkbox:
+☐ Remember Me
+
+Links:
+
+Forgot Password?
+
+Buttons:
+
+Primary:
+Sign In
+
+Secondary:
+Create Account
+
+Divider
+
+OR
+
+Continue with College Email
+
+--------------------------------------------------
+
+VALIDATION
+
+Show modern inline validation.
+
+Examples:
+
+Register Number cannot be empty.
+
+Password must contain at least 8 characters.
+
+Show loading animation while signing in.
+
+--------------------------------------------------
+
+LOGIN FLOW
+
+For MVP:
+
+No real backend authentication is required.
+
+Use dummy authentication.
+
+If Register Number and Password are entered successfully,
+
+simulate a login delay (1 second),
+
+then automatically navigate to:
+
+/dashboard
+
+The dashboard already exists in the project.
+
+DO NOT create another dashboard.
+
+Navigate only to the existing dashboard.
+
+--------------------------------------------------
+
+USER EXPERIENCE
+
+When login succeeds:
+
+Show a success toast:
+
+"Welcome back to CampusOne!"
+
+Then redirect to the existing Dashboard.
+
+If login fails:
+
+Show a clean error message.
+
+--------------------------------------------------
+
+EXTRA
+
+Add:
+
+Show/Hide Password button
+
+Smooth animations
+
+Hover effects
+
+Keyboard accessibility
+
+Pressing Enter should trigger Login.
+
+--------------------------------------------------
+
+DO NOT
+
+❌ Create another dashboard.
+
+❌ Create another homepage.
+
+❌ Create another navigation.
+
+❌ Change existing routes.
+
+❌ Modify existing components.
+
+ONLY create and integrate the Login page with the current application.
+
+The login page should seamlessly redirect to my existing Dashboard after successful login.

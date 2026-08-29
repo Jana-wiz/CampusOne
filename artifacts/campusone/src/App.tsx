@@ -4,9 +4,9 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import {
-  ArrowRight, BadgeCheck, Bell, BookOpen, Bookmark, BriefcaseBusiness, Building2, CalendarDays,
-  Check, ChevronRight, CircleHelp, Clock3, Compass, ExternalLink, Filter, FolderOpen, GraduationCap,
-  Heart, Home, KeyRound, Lightbulb, Link2, LockKeyhole, LogOut, Mail, MapPin, Menu, MessageCircle,
+  AlertCircle, ArrowRight, BadgeCheck, Bell, BookOpen, Bookmark, BriefcaseBusiness, Building2, CalendarDays,
+  Check, ChevronRight, CircleHelp, Clock3, Compass, ExternalLink, Eye, EyeOff, Filter, FolderOpen, GraduationCap,
+  Heart, Home, KeyRound, Lightbulb, Link2, LoaderCircle, LockKeyhole, LogOut, Mail, MapPin, Menu, MessageCircle,
   MessageSquare, MoreHorizontal, Paperclip, PanelLeftClose, Phone, Pin, Plus, Search, Send, Settings2,
   Share2, ShieldCheck, Sparkles, Star, Trophy, UserPlus, UserRound, UsersRound, Video, X
 } from 'lucide-react';
@@ -120,15 +120,76 @@ function AppShell({ children }: { children: ReactNode }) {
 
 function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const [, setLocation] = useLocation();
-  const [step, setStep] = useState<'form' | 'otp'>(mode === 'login' ? 'form' : 'form');
+  const [step, setStep] = useState<'form' | 'otp'>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [reg, setReg] = useState('');
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [emailMode, setEmailMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [success, setSuccess] = useState(false);
   const isSignup = mode === 'signup';
-  const submit = (e: React.FormEvent) => { e.preventDefault(); if (isSignup && step === 'form') { setStep('otp'); return; } setSubmitted(true); setTimeout(() => setLocation('/'), 500); };
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+
+    if (step === 'otp') {
+      if (otp.length !== 6) {
+        setError('Enter the 6-digit code from your college email.');
+        return;
+      }
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setSuccess(true);
+        setTimeout(() => setLocation('/dashboard'), 450);
+      }, 1000);
+      return;
+    }
+
+    if (!isSignup && emailMode && !email.trim()) {
+      setError('College email cannot be empty.');
+      return;
+    }
+    if ((isSignup || !emailMode) && !reg.trim()) {
+      setError('Register number cannot be empty.');
+      return;
+    }
+    if ((isSignup || emailMode) && email && !email.includes('@')) {
+      setError('Enter a valid college email address.');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Password cannot be empty.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must contain at least 8 characters.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      if (isSignup) {
+        setStep('otp');
+        return;
+      }
+      setSuccess(true);
+      setTimeout(() => setLocation('/dashboard'), 450);
+    }, 1000);
+  };
+
+  const forgotPassword = () => {
+    setError('');
+    setNotice('If an account exists for this register number, reset instructions are on their way.');
+  };
+
   return <div className="noise flex min-h-[100dvh] bg-[hsl(var(--background))]">
     <section className="relative hidden w-[43%] overflow-hidden bg-[hsl(var(--sidebar))] p-12 text-white lg:flex lg:flex-col">
       <div className="absolute -right-28 -top-24 h-80 w-80 rounded-full border-[38px] border-[hsl(var(--accent)/.18)]" /><div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full border-[55px] border-[hsl(var(--primary)/.14)]" />
@@ -137,15 +198,20 @@ function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     </section>
     <section className="flex flex-1 items-center justify-center px-5 py-10 sm:px-10"><div className="w-full max-w-[450px]">
       <div className="mb-10 flex items-center justify-between lg:hidden"><Logo compact /><span className="font-serif text-xl font-bold">Campus<span className="text-[hsl(var(--primary))]">One</span></span></div>
-      {step === 'form' ? <><div className="mb-8"><p className="mb-2 font-mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--primary))]">{isSignup ? 'Start with your campus identity' : 'Welcome back to your campus'}</p><h2 className="font-serif text-4xl font-bold tracking-[-.035em]">{isSignup ? 'Make the first hello.' : 'Good to see you again.'}</h2><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">{isSignup ? 'Your official college details keep this space warm, real, and yours.' : 'Sign in to pick up where you left off.'}</p></div>
-        <form onSubmit={submit} className="space-y-4">
-          {isSignup && <label className="block"><span className="mb-1.5 block text-xs font-semibold">College registration number</span><div className="relative"><KeyRound className="absolute left-3 top-3.5 text-[hsl(var(--muted-foreground))]" size={17} /><input required value={reg} onChange={e => setReg(e.target.value)} placeholder="e.g. NB-2024-01842" data-testid="input-registration-number" className="h-12 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-10 pr-3 text-sm outline-none transition focus:border-[hsl(var(--primary))]" /></div></label>}
-          <label className="block"><span className="mb-1.5 block text-xs font-semibold">College email</span><div className="relative"><Mail className="absolute left-3 top-3.5 text-[hsl(var(--muted-foreground))]" size={17} /><input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@northbridge.edu" data-testid="input-college-email" className="h-12 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-10 pr-3 text-sm outline-none transition focus:border-[hsl(var(--primary))]" /></div></label>
-          <label className="block"><div className="mb-1.5 flex justify-between text-xs font-semibold"><span>Password</span>{!isSignup && <button type="button" data-testid="button-forgot-password" className="font-medium text-[hsl(var(--primary))]">Forgot password?</button>}</div><div className="relative"><LockKeyhole className="absolute left-3 top-3.5 text-[hsl(var(--muted-foreground))]" size={17} /><input required type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" data-testid="input-password" className="h-12 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-10 pr-20 text-sm outline-none transition focus:border-[hsl(var(--primary))]" /><button type="button" onClick={() => setShowPassword(!showPassword)} data-testid="button-toggle-password" className="absolute right-3 top-3 text-xs font-semibold text-[hsl(var(--muted-foreground))]">{showPassword ? 'Hide' : 'Show'}</button></div></label>
-          <Button type="submit" className="mt-2 h-12 w-full" testId="button-submit-auth">{submitted ? <><Check size={17} />Welcome in</> : <>{isSignup ? 'Continue with email verification' : 'Sign in'}<ArrowRight size={17} /></>}</Button>
-        </form>
-        <p className="mt-7 text-center text-sm text-[hsl(var(--muted-foreground))]">{isSignup ? 'Already have an account?' : 'New to CampusOne?'} <Link href={isSignup ? '/login' : '/signup'} data-testid="link-switch-auth" className="font-bold text-[hsl(var(--primary))]">{isSignup ? 'Sign in' : 'Create your account'}</Link></p>
-      </> : <div className="enter-up"><button onClick={() => setStep('form')} data-testid="button-back-auth" className="mb-8 flex items-center gap-2 text-sm font-semibold text-[hsl(var(--muted-foreground))]"><ArrowRight size={16} className="rotate-180" />Back</button><div className="mb-8"><span className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[hsl(var(--accent))]"><Mail size={24} /></span><h2 className="font-serif text-4xl font-bold tracking-[-.035em]">Check your inbox.</h2><p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">We sent a 6-digit code to <strong className="text-[hsl(var(--foreground))]">{email || 'your college email'}</strong>. It expires in 10 minutes.</p></div><form onSubmit={submit} className="space-y-4"><input autoFocus required minLength={6} maxLength={6} value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="000000" data-testid="input-otp" className="h-14 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-center font-mono text-2xl tracking-[.4em] outline-none focus:border-[hsl(var(--primary))]" /><Button type="submit" className="h-12 w-full" testId="button-verify-otp">Verify and enter <ArrowRight size={17} /></Button></form><button data-testid="button-resend-otp" className="mt-5 w-full text-center text-sm font-semibold text-[hsl(var(--primary))]">Resend code</button></div>}
+       {success && <div role="status" aria-live="polite" className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-[hsl(var(--sidebar))] px-4 py-3 text-sm font-semibold text-white shadow-xl"><Check size={17} className="text-[hsl(var(--sidebar-primary))]" />Welcome back to CampusOne!</div>}
+       {step === 'form' ? <><div className="mb-8"><p className="mb-2 font-mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--primary))]">{isSignup ? 'Start with your campus identity' : 'CampusOne · Northbridge University'}</p><h2 className="font-serif text-4xl font-bold tracking-[-.035em]">{isSignup ? 'Create your account.' : <>Welcome Back <span aria-hidden="true">👋</span></>}</h2><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">{isSignup ? 'Your official college details keep this space warm, real, and yours.' : 'Sign in to continue your campus journey.'}</p></div>
+         <form onSubmit={submit} noValidate className="space-y-4">
+           {(isSignup || !emailMode) && <label className="block"><span className="mb-1.5 block text-xs font-semibold">College Register Number</span><div className="relative"><KeyRound className="absolute left-3 top-3.5 text-[hsl(var(--muted-foreground))]" size={17} /><input autoComplete="username" value={reg} onChange={e => { setReg(e.target.value); setError(''); }} placeholder="e.g. NB-2024-01842" data-testid="input-registration-number" aria-invalid={!!error && !reg} className="h-12 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-10 pr-3 text-sm outline-none transition focus:border-[hsl(var(--primary))]" /></div></label>}
+           {(isSignup || emailMode) && <label className="block"><span className="mb-1.5 block text-xs font-semibold">College Email</span><div className="relative"><Mail className="absolute left-3 top-3.5 text-[hsl(var(--muted-foreground))]" size={17} /><input autoComplete="email" type="email" value={email} onChange={e => { setEmail(e.target.value); setError(''); }} placeholder="you@northbridge.edu" data-testid="input-college-email" className="h-12 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-10 pr-3 text-sm outline-none transition focus:border-[hsl(var(--primary))]" /></div></label>}
+           <label className="block"><div className="mb-1.5 flex justify-between text-xs font-semibold"><span>Password</span>{!isSignup && <button type="button" onClick={forgotPassword} data-testid="button-forgot-password" className="font-medium text-[hsl(var(--primary))] hover:underline">Forgot Password?</button>}</div><div className="relative"><LockKeyhole className="absolute left-3 top-3.5 text-[hsl(var(--muted-foreground))]" size={17} /><input autoComplete={isSignup ? 'new-password' : 'current-password'} required type={showPassword ? 'text' : 'password'} value={password} onChange={e => { setPassword(e.target.value); setError(''); }} placeholder="At least 8 characters" data-testid="input-password" className="h-12 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-10 pr-12 text-sm outline-none transition focus:border-[hsl(var(--primary))]" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} data-testid="button-toggle-password" className="absolute right-3 top-3 rounded-md p-1 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]">{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>
+           {!isSignup && <label className="flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} data-testid="checkbox-remember-me" className="h-4 w-4 accent-[hsl(var(--primary))]" />Remember Me</label>}
+           {error && <p role="alert" className="flex items-center gap-2 rounded-xl border border-[hsl(var(--destructive)/.25)] bg-[hsl(var(--destructive)/.07)] px-3 py-2.5 text-xs font-semibold text-[hsl(var(--destructive))]"><AlertCircle size={15} />{error}</p>}
+           {notice && <p role="status" className="rounded-xl border border-[hsl(var(--secondary)/.25)] bg-[hsl(var(--secondary)/.08)] px-3 py-2.5 text-xs font-semibold text-[hsl(var(--secondary))]">{notice}</p>}
+           <Button type="submit" disabled={isSubmitting} className="mt-2 h-12 w-full" testId="button-submit-auth">{isSubmitting ? <><LoaderCircle size={17} className="animate-spin" />Signing in...</> : <>{isSignup ? 'Create Account' : 'Sign In'}<ArrowRight size={17} /></>}</Button>
+         </form>
+         {!isSignup && !emailMode && <><div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.15em] text-[hsl(var(--muted-foreground))]"><span className="h-px flex-1 bg-[hsl(var(--border))]" />OR<span className="h-px flex-1 bg-[hsl(var(--border))]" /></div><button type="button" onClick={() => { setEmailMode(true); setError(''); }} data-testid="button-college-email-login" className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-sm font-semibold transition hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--muted)/.5)]"><Mail size={17} className="text-[hsl(var(--primary))]" />Continue with College Email</button></>}
+         <p className="mt-7 text-center text-sm text-[hsl(var(--muted-foreground))]">{isSignup ? 'Already have an account?' : 'New to CampusOne?'} <Link href={isSignup ? '/login' : '/signup'} data-testid="link-switch-auth" className="font-bold text-[hsl(var(--primary))] hover:underline">{isSignup ? 'Sign in' : 'Create Account'}</Link></p>
+       </> : <div className="enter-up"><button onClick={() => { setStep('form'); setError(''); }} data-testid="button-back-auth" className="mb-8 flex items-center gap-2 text-sm font-semibold text-[hsl(var(--muted-foreground))]"><ArrowRight size={16} className="rotate-180" />Back</button><div className="mb-8"><span className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[hsl(var(--accent))]"><Mail size={24} /></span><h2 className="font-serif text-4xl font-bold tracking-[-.035em]">Check your inbox.</h2><p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">We sent a 6-digit code to <strong className="text-[hsl(var(--foreground))]">{email || 'your college email'}</strong>. It expires in 10 minutes.</p></div><form onSubmit={submit} noValidate className="space-y-4"><input autoFocus required minLength={6} maxLength={6} value={otp} onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setError(''); }} inputMode="numeric" placeholder="000000" aria-label="6-digit email verification code" data-testid="input-otp" className="h-14 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-center font-mono text-2xl tracking-[.4em] outline-none focus:border-[hsl(var(--primary))]" />{error && <p role="alert" className="flex items-center gap-2 rounded-xl border border-[hsl(var(--destructive)/.25)] bg-[hsl(var(--destructive)/.07)] px-3 py-2.5 text-xs font-semibold text-[hsl(var(--destructive))]"><AlertCircle size={15} />{error}</p>}<Button type="submit" disabled={isSubmitting} className="h-12 w-full" testId="button-verify-otp">{isSubmitting ? <><LoaderCircle size={17} className="animate-spin" />Verifying...</> : <>Verify and enter <ArrowRight size={17} /></>}</Button></form><button type="button" onClick={() => setNotice('A fresh verification code has been sent.')} data-testid="button-resend-otp" className="mt-5 w-full text-center text-sm font-semibold text-[hsl(var(--primary))]">Resend code</button>{notice && <p role="status" className="mt-3 text-center text-xs font-semibold text-[hsl(var(--secondary))]">{notice}</p>}</div>}
       <p className="mt-12 flex items-center justify-center gap-2 text-center text-xs text-[hsl(var(--muted-foreground))]"><ShieldCheck size={15} />CampusOne is exclusive to verified Northbridge students.</p>
     </div></section>
   </div>;
@@ -272,7 +338,7 @@ function EmptyState({ icon: Icon, title, copy, action }: { icon: typeof Search; 
 function Router() {
   const [location] = useLocation();
   if (location === '/login' || location === '/signup') return <Switch><Route path="/login"><AuthPage mode="login" /></Route><Route path="/signup"><AuthPage mode="signup" /></Route></Switch>;
-  return <AppShell><Switch><Route path="/" component={HomePage} /><Route path="/profile" component={ProfilePage} /><Route path="/connections" component={ConnectionsPage} /><Route path="/messages" component={MessagesPage} /><Route path="/mentors" component={MentorsPage} /><Route path="/clubs" component={ClubsPage} /><Route path="/events" component={EventsPage} /><Route path="/resources" component={ResourcesPage} /><Route path="/opportunities" component={OpportunitiesPage} /><Route path="/notifications" component={NotificationsPage} /><Route path="/settings" component={SettingsPage} /><Route><EmptyState icon={Compass} title="Page not found" copy="This campus path does not exist yet." action={<Link href="/" data-testid="link-not-found-home" className="inline-flex rounded-xl bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-bold text-white">Back home</Link>} /></Route></Switch></AppShell>;
+  return <AppShell><Switch><Route path="/" component={HomePage} /><Route path="/dashboard" component={HomePage} /><Route path="/profile" component={ProfilePage} /><Route path="/connections" component={ConnectionsPage} /><Route path="/messages" component={MessagesPage} /><Route path="/mentors" component={MentorsPage} /><Route path="/clubs" component={ClubsPage} /><Route path="/events" component={EventsPage} /><Route path="/resources" component={ResourcesPage} /><Route path="/opportunities" component={OpportunitiesPage} /><Route path="/notifications" component={NotificationsPage} /><Route path="/settings" component={SettingsPage} /><Route><EmptyState icon={Compass} title="Page not found" copy="This campus path does not exist yet." action={<Link href="/" data-testid="link-not-found-home" className="inline-flex rounded-xl bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-bold text-white">Back home</Link>} /></Route></Switch></AppShell>;
 }
 
 function App() {
